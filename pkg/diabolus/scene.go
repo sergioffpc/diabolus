@@ -1,6 +1,8 @@
 package diabolus
 
-import "math"
+import (
+	"math"
+)
 
 type Interaction struct {
 	P      Point3
@@ -10,12 +12,12 @@ type Interaction struct {
 	Object *GeometricPrimitive
 }
 
-func (i Interaction) SampleLi(p LightPrimitive, u Point2) Spectrum {
-	iL := TransformInteraction(i, p.WorldToLight)
-	wiL, li := p.Light.SampleLi(iL, u)
+func (i Interaction) SampleLi(p LightPrimitive, u Point2) (Vector3, Spectrum) {
+	iL := i.Transform(p.WorldToLight)
+	wiL, pdf, li := p.Light.SampleLi(iL, u)
 	f := i.Object.Material.F(iL, wiL)
 	theta := Vector3.Dot(wiL, Vector3(iL.N))
-	return f.Mul(li).MulFloat(math.Abs(theta))
+	return wiL.Transform(p.LightToWorld), f.Mul(li).MulFloat(math.Abs(theta)).DivFloat(pdf)
 }
 
 func (i Interaction) Le() Spectrum {
@@ -23,19 +25,30 @@ func (i Interaction) Le() Spectrum {
 }
 
 type GeometricPrimitive struct {
+	Label         string
 	Shape         Shape
 	Material      Material
-	ObjectToWorld Matrix44
-	WorldToObject Matrix44
+	ObjectToWorld Transform
+	WorldToObject Transform
+}
+
+func NewGeometricPrimitive(label string, shape Shape, material Material, transform Transform) GeometricPrimitive {
+	return GeometricPrimitive{
+		Label:         label,
+		Shape:         shape,
+		Material:      material,
+		ObjectToWorld: transform,
+		WorldToObject: transform.Inverse(),
+	}
 }
 
 func (p *GeometricPrimitive) intersect(ray Ray) (ok bool, isect Interaction) {
-	rO := TransformRay(ray, p.WorldToObject)
-	if hit, pos, n, t := p.Shape.Intersect(rO); hit {
+	rO := ray.Transform(p.WorldToObject)
+	if hit, pO, nO, t := p.Shape.Intersect(rO); hit {
 		ok = true
 		isect = Interaction{
-			P:      TransformPoint3(pos, p.ObjectToWorld),
-			N:      TransformNormal3(n, p.ObjectToWorld).Normalize(),
+			P:      pO.Transform(p.ObjectToWorld),
+			N:      nO.Transform(p.ObjectToWorld).Normalize(),
 			Wo:     ray.D.Neg(),
 			T:      t,
 			Object: p,
@@ -44,10 +57,25 @@ func (p *GeometricPrimitive) intersect(ray Ray) (ok bool, isect Interaction) {
 	return ok, isect
 }
 
+func (p *GeometricPrimitive) intersectP(ray Ray) bool {
+	rO := ray.Transform(p.WorldToObject)
+	return p.Shape.IntersectP(rO)
+}
+
 type LightPrimitive struct {
+	Label        string
 	Light        Light
-	LightToWorld Matrix44
-	WorldToLight Matrix44
+	LightToWorld Transform
+	WorldToLight Transform
+}
+
+func NewLightPrimitive(label string, light Light, transform Transform) LightPrimitive {
+	return LightPrimitive{
+		Label:        label,
+		Light:        light,
+		LightToWorld: transform,
+		WorldToLight: transform.Inverse(),
+	}
 }
 
 type Scene struct {
@@ -57,11 +85,22 @@ type Scene struct {
 
 func (s Scene) Intersect(ray Ray) (ok bool, nearest Interaction) {
 	for _, p := range s.Geometries {
-		if hit, isect := p.intersect(ray); hit {
+		gP := p
+		if hit, isect := gP.intersect(ray); hit {
 			ok = true
 			nearest = isect
 			ray.TMax = isect.T
 		}
 	}
 	return ok, nearest
+}
+
+func (s Scene) IntersectP(ray Ray) bool {
+	for _, p := range s.Geometries {
+		gP := p
+		if gP.intersectP(ray) {
+			return true
+		}
+	}
+	return false
 }

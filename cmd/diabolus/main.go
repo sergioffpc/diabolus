@@ -17,7 +17,8 @@ import (
 )
 
 func main() {
-	width, height, msaaCount := 1280, 720, 8
+	width, height := 1280, 720
+	subdivsCount, samplesCount := 1, 1
 
 	out, err := os.OpenFile("image.png", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -25,7 +26,7 @@ func main() {
 	}
 	defer out.Close()
 
-	pb := progressbar.Default(int64(width * height * msaaCount))
+	pb := progressbar.Default(int64(width * height * samplesCount))
 	r := renderer.ProgressRenderer{
 		Progress: pb,
 		Renderer: renderer.NewSubdivRenderer(
@@ -33,27 +34,35 @@ func main() {
 				Progress:   pb,
 				Integrator: integrator.NewWhittedIntegrator(),
 			},
-			camera.NewPerspectiveCamera(width, height, sampler.NewRandomSampler(msaaCount)),
-			film.NewImageFilm(width, height, msaaCount),
-			1,
+			camera.NewPerspectiveCamera(width, height),
+			film.NewImageFilm(width, height, samplesCount),
+			sampler.NewRandomSampler(),
+			samplesCount,
+			subdivsCount,
 		),
 	}
 
 	s := diabolus.Scene{
 		Geometries: []diabolus.GeometricPrimitive{
-			{
-				Shape:         shape.NewSphereShape(),
-				Material:      material.NewMatteMaterial(diabolus.Spectrum{R: 0, G: 0, B: 10}),
-				ObjectToWorld: diabolus.Translate(0, 0, 2),
-				WorldToObject: diabolus.Translate(0, 0, -2),
-			},
+			diabolus.NewGeometricPrimitive(
+				"sphere0",
+				shape.NewSphereShape(),
+				material.NewMatteMaterial(diabolus.Spectrum{R: 1, G: 0, B: 0}),
+				diabolus.TranslateTransform(0, 0, 5),
+			),
+			diabolus.NewGeometricPrimitive(
+				"sphere1",
+				shape.NewSphereShape(),
+				material.NewMatteMaterial(diabolus.Spectrum{R: 0, G: 1, B: 0}),
+				diabolus.TranslateTransform(-1.5, 0, 2).Mul(diabolus.ScaleTransform(0.5, 0.5, 0.5)),
+			),
 		},
 		Lights: []diabolus.LightPrimitive{
-			{
-				Light:        light.NewPointLight(diabolus.Spectrum{R: 1, G: 1, B: 1}),
-				LightToWorld: diabolus.Translate(0, 0, -1),
-				WorldToLight: diabolus.Translate(0, 0, 1),
-			},
+			diabolus.NewLightPrimitive(
+				"light0",
+				light.NewPointLight(diabolus.Spectrum{R: 50, G: 50, B: 50}),
+				diabolus.TranslateTransform(-2, 0, 0),
+			),
 		},
 	}
 

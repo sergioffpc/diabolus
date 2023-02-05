@@ -5,7 +5,7 @@ import "io"
 type Film interface {
 	AddSample(x, y int, s Spectrum)
 
-	GetBounds() Bounds2
+	Bounds() Bounds2
 
 	Write(w io.Writer) error
 }

@@ -11,7 +11,7 @@ type ProgressIntegrator struct {
 	Integrator diabolus.Integrator
 }
 
-func (i ProgressIntegrator) Render(ray diabolus.Ray, scene diabolus.Scene) diabolus.Spectrum {
+func (i ProgressIntegrator) Render(ray diabolus.Ray, scene diabolus.Scene, sampler diabolus.Sampler) diabolus.Spectrum {
 	i.Progress.Add(1)
-	return i.Integrator.Render(ray, scene)
+	return i.Integrator.Render(ray, scene, sampler)
 }

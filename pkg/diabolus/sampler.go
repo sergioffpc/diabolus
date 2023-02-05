@@ -1,5 +1,5 @@
 package diabolus
 
 type Sampler interface {
-	GetSample2D() []Point2
+	Sample2D() Point2
 }

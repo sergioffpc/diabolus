@@ -49,7 +49,7 @@ func TestMatrix44Inv(t *testing.T) {
 		-1.0 / 4.0, 1.0 / 4.0, 1.0 / 4.0, 1.0 / 4.0,
 	}
 
-	assert.Equal(t, b, a.Inv())
+	assert.Equal(t, b, a.Inverse())
 }
 
 func TestMatrix44Mul(t *testing.T) {
@@ -60,7 +60,7 @@ func TestMatrix44Mul(t *testing.T) {
 		-1, 1, 1, 1,
 	}
 
-	assert.Equal(t, diabolus.Identity(), diabolus.Matrix44.Mul(a, a.Inv()))
+	assert.Equal(t, diabolus.Identity(), diabolus.Matrix44.Mul(a, a.Inverse()))
 }
 
 func TestMatrix44Transpose(t *testing.T) {
@@ -88,7 +88,7 @@ func TestScale(t *testing.T) {
 		0, 0, 0, 1,
 	}
 
-	assert.Equal(t, a, diabolus.Scale(1, 2, 3))
+	assert.Equal(t, a, diabolus.ScaleTransform(1, 2, 3).M)
 }
 
 func TestScaleInv(t *testing.T) {
@@ -99,7 +99,7 @@ func TestScaleInv(t *testing.T) {
 		0, 0, 0, 1,
 	}
 
-	assert.Equal(t, a, diabolus.Scale(1, 2, 3).Inv())
+	assert.Equal(t, a, diabolus.ScaleTransform(1, 2, 3).Inv)
 }
 
 func TestTranslate(t *testing.T) {
@@ -110,7 +110,7 @@ func TestTranslate(t *testing.T) {
 		0, 0, 0, 1,
 	}
 
-	assert.Equal(t, a, diabolus.Translate(1, 2, 3))
+	assert.Equal(t, a, diabolus.TranslateTransform(1, 2, 3).M)
 }
 
 func TestTranslateInv(t *testing.T) {
@@ -121,5 +121,5 @@ func TestTranslateInv(t *testing.T) {
 		0, 0, 0, 1,
 	}
 
-	assert.Equal(t, a, diabolus.Translate(1, 2, 3).Inv())
+	assert.Equal(t, a, diabolus.TranslateTransform(1, 2, 3).Inv)
 }

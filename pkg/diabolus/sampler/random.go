@@ -5,22 +5,13 @@ import (
 	"sergioffpc/diabolus/pkg/diabolus"
 )
 
-type RandomSampler struct {
-	SamplesCount int
-}
+type RandomSampler struct{}
 
-func NewRandomSampler(samplesCount int) RandomSampler {
-	return RandomSampler{SamplesCount: samplesCount}
-}
+func NewRandomSampler() RandomSampler { return RandomSampler{} }
 
-func (s RandomSampler) GetSample2D() []diabolus.Point2 {
-	us := make([]diabolus.Point2, 0, s.SamplesCount)
-	for i := 0; i < s.SamplesCount; i++ {
-		p := diabolus.Point2{
-			X: rand.Float64(),
-			Y: rand.Float64(),
-		}
-		us = append(us, p)
+func (s RandomSampler) Sample2D() diabolus.Point2 {
+	return diabolus.Point2{
+		X: rand.Float64(),
+		Y: rand.Float64(),
 	}
-	return us
 }

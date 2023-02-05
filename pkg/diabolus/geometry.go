@@ -18,6 +18,8 @@ func (n Normal3) Normalize() Normal3 { return Normal3.Div(n, n.Len()) }
 
 type Point2 struct{ X, Y float64 }
 
+func (p Point2) Add(q Point2) Point2 { return Point2{p.X + q.X, p.Y + q.Y} }
+
 type Point3 struct{ X, Y, Z float64 }
 
 func (p Point3) Add(q Point3) Point3 { return Point3{p.X + q.X, p.Y + q.Y, p.Z + q.Z} }

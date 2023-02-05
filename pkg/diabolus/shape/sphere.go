@@ -27,3 +27,18 @@ func (s SphereShape) Intersect(ray diabolus.Ray) (bool, diabolus.Point3, diabolu
 		return false, diabolus.Point3{}, diabolus.Normal3{}, math.MaxFloat64
 	}
 }
+
+func (s SphereShape) IntersectP(ray diabolus.Ray) bool {
+	a := diabolus.Vector3.Dot(ray.D, ray.D)
+	b := 2 * diabolus.Vector3.Dot(ray.D, diabolus.Vector3(ray.O))
+	c := diabolus.Vector3.Dot(diabolus.Vector3(ray.O), diabolus.Vector3(ray.O)) - 1
+
+	switch ok, t0, t1 := diabolus.QuadraticSolver(a, b, c); {
+	case ok && t0 > 0 && t0 < ray.TMax:
+		fallthrough
+	case ok && t1 > 0 && t1 < ray.TMax:
+		return true
+	default:
+		return false
+	}
+}

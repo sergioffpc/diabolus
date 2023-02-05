@@ -145,7 +145,7 @@ func (m Matrix44) Det() float64 {
 
 func (m Matrix44) DivFloat(f float64) Matrix44 { return Matrix44.MulFloat(m, 1/f) }
 
-func (m Matrix44) Inv() Matrix44 {
+func (m Matrix44) Inverse() Matrix44 {
 	return Matrix44.DivFloat(m.Adj(), m.Det())
 }
 
@@ -249,36 +249,82 @@ func (m Matrix44) indexOf(i, j int) int {
 
 func Identity() Matrix44 { return Matrix44{0: 1, 5: 1, 10: 1, 15: 1} }
 
-func Scale(x, y, z float64) Matrix44 {
-	return Matrix44{
-		x, 0, 0, 0,
-		0, y, 0, 0,
-		0, 0, z, 0,
-		0, 0, 0, 1,
+type Transform struct{ M, Inv Matrix44 }
+
+func (t Transform) Inverse() Transform {
+	return Transform{
+		M:   t.Inv,
+		Inv: t.M,
 	}
 }
 
-func Translate(x, y, z float64) Matrix44 {
-	return Matrix44{
-		1, 0, 0, x,
-		0, 1, 0, y,
-		0, 0, 1, z,
-		0, 0, 0, 1,
+func (t Transform) Mul(u Transform) Transform {
+	return Transform{
+		M:   Matrix44.Mul(t.M, u.M),
+		Inv: Matrix44.Mul(u.Inv, t.Inv),
 	}
 }
 
-func TransformInteraction(isect Interaction, m Matrix44) Interaction {
+func (t Transform) Transpose() Transform {
+	return Transform{
+		M:   t.M.Transpose(),
+		Inv: t.Inv.Transpose(),
+	}
+}
+
+func IdentityTransform() Transform {
+	return Transform{
+		M:   Identity(),
+		Inv: Identity(),
+	}
+}
+
+func ScaleTransform(x, y, z float64) Transform {
+	return Transform{
+		M: Matrix44{
+			x, 0, 0, 0,
+			0, y, 0, 0,
+			0, 0, z, 0,
+			0, 0, 0, 1,
+		},
+		Inv: Matrix44{
+			1 / x, 0, 0, 0,
+			0, 1 / y, 0, 0,
+			0, 0, 1 / z, 0,
+			0, 0, 0, 1,
+		},
+	}
+}
+
+func TranslateTransform(x, y, z float64) Transform {
+	return Transform{
+		M: Matrix44{
+			1, 0, 0, x,
+			0, 1, 0, y,
+			0, 0, 1, z,
+			0, 0, 0, 1,
+		},
+		Inv: Matrix44{
+			1, 0, 0, -x,
+			0, 1, 0, -y,
+			0, 0, 1, -z,
+			0, 0, 0, 1,
+		},
+	}
+}
+
+func (i Interaction) Transform(t Transform) Interaction {
 	return Interaction{
-		P:      TransformPoint3(isect.P, m),
-		N:      TransformNormal3(isect.N, m).Normalize(),
-		Wo:     TransformVector3(isect.Wo, m).Normalize(),
-		T:      isect.T,
-		Object: isect.Object,
+		P:      i.P.Transform(t),
+		N:      i.N.Transform(t).Normalize(),
+		Wo:     i.Wo.Transform(t).Normalize(),
+		T:      i.T,
+		Object: i.Object,
 	}
 }
 
-func TransformNormal3(n Normal3, m Matrix44) Normal3 {
-	inv := m.Inv()
+func (n Normal3) Transform(t Transform) Normal3 {
+	inv := t.Inv
 	return Normal3{
 		X: inv[inv.indexOf(0, 0)]*n.X + inv[inv.indexOf(1, 0)]*n.Y + inv[inv.indexOf(2, 0)]*n.Z,
 		Y: inv[inv.indexOf(0, 1)]*n.X + inv[inv.indexOf(1, 1)]*n.Y + inv[inv.indexOf(2, 1)]*n.Z,
@@ -286,28 +332,30 @@ func TransformNormal3(n Normal3, m Matrix44) Normal3 {
 	}
 }
 
-func TransformPoint3(p Point3, m Matrix44) Point3 {
-	t := Point3{
+func (p Point3) Transform(t Transform) Point3 {
+	m := t.M
+	q := Point3{
 		X: m[m.indexOf(0, 0)]*p.X + m[m.indexOf(0, 1)]*p.Y + m[m.indexOf(0, 2)]*p.Z + m[m.indexOf(0, 3)],
 		Y: m[m.indexOf(1, 0)]*p.X + m[m.indexOf(1, 1)]*p.Y + m[m.indexOf(1, 2)]*p.Z + m[m.indexOf(1, 3)],
 		Z: m[m.indexOf(2, 0)]*p.X + m[m.indexOf(2, 1)]*p.Y + m[m.indexOf(2, 2)]*p.Z + m[m.indexOf(2, 3)],
 	}
 	w := m[m.indexOf(3, 0)]*p.X + m[m.indexOf(3, 1)]*p.Y + m[m.indexOf(3, 2)]*p.Z + m[m.indexOf(3, 3)]
 	if !EqualFloat(w, 1) {
-		t.DivAssignFloat(w)
+		q.DivAssignFloat(w)
 	}
-	return t
+	return q
 }
 
-func TransformRay(r Ray, m Matrix44) Ray {
+func (r Ray) Transform(t Transform) Ray {
 	return Ray{
-		O:    TransformPoint3(r.O, m),
-		D:    TransformVector3(r.D, m).Normalize(),
+		O:    r.O.Transform(t),
+		D:    r.D.Transform(t).Normalize(),
 		TMax: r.TMax,
 	}
 }
 
-func TransformVector3(v Vector3, m Matrix44) Vector3 {
+func (v Vector3) Transform(t Transform) Vector3 {
+	m := t.M
 	return Vector3{
 		X: m[m.indexOf(0, 0)]*v.X + m[m.indexOf(0, 1)]*v.Y + m[m.indexOf(0, 2)]*v.Z,
 		Y: m[m.indexOf(1, 0)]*v.X + m[m.indexOf(1, 1)]*v.Y + m[m.indexOf(1, 2)]*v.Z,
