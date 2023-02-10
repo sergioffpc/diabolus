@@ -1,7 +1,11 @@
 package diabolus
 
+import "math"
+
 type Material interface {
 	F(isect Interaction, wi Vector3) Spectrum
+
+	SampleF(isect Interaction, u Point2) (Vector3, float64, Spectrum)
 }
 
 type Bsdf struct {
@@ -16,4 +20,20 @@ func (b Bsdf) F(isect Interaction, wi Vector3) Spectrum {
 		}
 	}
 	return f
+}
+
+func (b Bsdf) SampleF(isect Interaction, u Point2) (Vector3, float64, Spectrum) {
+	wi := ConcentricSampleHemisphere(u)
+	if isect.Wo.Z < 0 {
+		wi.Z *= -1
+	}
+
+	var pdf float64
+	if isect.Wo.Z*wi.Z > 0 {
+		pdf += math.Abs(wi.Z) * (1 / math.Pi)
+	}
+
+	f := b.F(isect, wi)
+
+	return wi, pdf, f
 }

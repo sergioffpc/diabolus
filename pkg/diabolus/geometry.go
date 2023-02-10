@@ -6,6 +6,8 @@ type Bounds2 struct{ Min, Max Point2 }
 
 type Normal3 struct{ X, Y, Z float64 }
 
+func (n Normal3) Add(m Normal3) Normal3 { return Normal3{n.X + m.X, n.Y + m.Y, n.Z + m.Z} }
+
 func (n Normal3) Div(f float64) Normal3 { return Normal3.Mul(n, 1/f) }
 
 func (n Normal3) Dot(m Normal3) float64 { return n.X*m.X + n.Y*m.Y + n.Z*m.Z }
@@ -19,6 +21,10 @@ func (n Normal3) Normalize() Normal3 { return Normal3.Div(n, n.Len()) }
 type Point2 struct{ X, Y float64 }
 
 func (p Point2) Add(q Point2) Point2 { return Point2{p.X + q.X, p.Y + q.Y} }
+
+func (p Point2) MulFloat(f float64) Point2 { return Point2{p.X * f, p.Y * f} }
+
+func (p Point2) SubVector(v Vector2) Point2 { return Point2{p.X + v.X, p.Y + v.Y} }
 
 type Point3 struct{ X, Y, Z float64 }
 
@@ -53,6 +59,8 @@ type Ray struct {
 }
 
 func (r Ray) Position(t float64) Point3 { return Point3.AddVector(r.O, Vector3.MulFloat(r.D, t)) }
+
+type Vector2 struct{ X, Y float64 }
 
 type Vector3 struct{ X, Y, Z float64 }
 

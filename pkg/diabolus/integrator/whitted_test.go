@@ -12,7 +12,7 @@ import (
 )
 
 func BenchmarkWhittedIntegrator(b *testing.B) {
-	integrator := integrator.NewWhittedIntegrator()
+	integrator := integrator.NewWhittedIntegrator(0)
 	ray := diabolus.Ray{
 		O:    diabolus.Point3{},
 		D:    diabolus.Vector3{X: 0, Y: 0, Z: 1},

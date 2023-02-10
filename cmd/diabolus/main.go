@@ -18,7 +18,7 @@ import (
 
 func main() {
 	width, height := 1280, 720
-	subdivsCount, samplesCount := 1, 1
+	subdivsCount, samplesCount := 8, 32
 
 	out, err := os.OpenFile("image.png", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -32,7 +32,7 @@ func main() {
 		Renderer: renderer.NewSubdivRenderer(
 			integrator.ProgressIntegrator{
 				Progress:   pb,
-				Integrator: integrator.NewWhittedIntegrator(),
+				Integrator: integrator.NewWhittedIntegrator(8),
 			},
 			camera.NewPerspectiveCamera(width, height),
 			film.NewImageFilm(width, height, samplesCount),

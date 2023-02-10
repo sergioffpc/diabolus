@@ -1,29 +1,5 @@
 package diabolus
 
-import (
-	"math"
-)
-
-type Interaction struct {
-	P      Point3
-	N      Normal3
-	Wo     Vector3
-	T      float64
-	Object *GeometricPrimitive
-}
-
-func (i Interaction) SampleLi(p LightPrimitive, u Point2) (Vector3, Spectrum) {
-	iL := i.Transform(p.WorldToLight)
-	wiL, pdf, li := p.Light.SampleLi(iL, u)
-	f := i.Object.Material.F(iL, wiL)
-	theta := Vector3.Dot(wiL, Vector3(iL.N))
-	return wiL.Transform(p.LightToWorld), f.Mul(li).MulFloat(math.Abs(theta)).DivFloat(pdf)
-}
-
-func (i Interaction) Le() Spectrum {
-	return Spectrum{}
-}
-
 type GeometricPrimitive struct {
 	Label         string
 	Shape         Shape

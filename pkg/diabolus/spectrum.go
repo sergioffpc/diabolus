@@ -2,6 +2,10 @@ package diabolus
 
 type Spectrum struct{ R, G, B float64 }
 
+func (s *Spectrum) Add(t Spectrum) Spectrum {
+	return Spectrum{R: s.R + t.R, G: s.G + t.G, B: s.B + t.B}
+}
+
 func (s *Spectrum) AddAssign(t Spectrum) {
 	s.R += t.R
 	s.G += t.G
@@ -32,4 +36,14 @@ func (s Spectrum) MulFloat(f float64) Spectrum {
 		G: s.G * f,
 		B: s.B * f,
 	}
+}
+
+func (s *Spectrum) Sub(t Spectrum) Spectrum {
+	return Spectrum{R: s.R - t.R, G: s.G - t.G, B: s.B - t.B}
+}
+
+func (s *Spectrum) SubAssign(t Spectrum) {
+	s.R -= t.R
+	s.G -= t.G
+	s.B -= t.B
 }
